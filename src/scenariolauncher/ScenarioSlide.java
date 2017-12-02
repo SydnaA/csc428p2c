@@ -8,11 +8,15 @@ package scenariolauncher;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -25,7 +29,12 @@ import javax.swing.UIManager;
  *
  * @author sydna
  */
-public class ScenarioSlide extends JPanel {
+public class ScenarioSlide extends JPanel implements MouseListener {
+
+    final String[] pictureNames = {"Abstract Shapes.jpg", "Abstract.jpg",
+        "Antelope Canyon.jpg", "Bahamas Aerial.jpg", "Blue Pond.jpg",
+        "Color Burst 1.jpg", "Color Burst 2.jpg", "Color Burst 3.jpg",
+        "Death Valley.jpg", "Desert.jpg"};
 
     private JFrame frame;
     private Image bgImage, toolbarImage, slidesImage,
@@ -35,6 +44,12 @@ public class ScenarioSlide extends JPanel {
     private List actionList;
     protected JLabel files[];
     protected int selectedFileIndex;
+
+    private List<Slide> slideList;
+    private int slideFocused;
+    
+    private List<Rectangle> activeButton;
+    private Map<Rectangle, String> rectActionMap;
 
     public ScenarioSlide(JFrame frame) {
 
@@ -76,27 +91,36 @@ public class ScenarioSlide extends JPanel {
             Logger.getLogger(ScenarioSlide.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        files = new JLabel[10];
-        for (int i = 0; i < files.length; i++) {
-            files[i] = new JLabel("picture_" + (i + 1) + ".png");
-            files[i].setBounds(490, 164 + (17 * i), 200, 16);
-            files[i].addMouseListener(new fileSelectorListener());
-            files[i].setBackground(UIManager.getColor("Panel.background"));
-            files[i].setOpaque(true);
-            this.add(files[i]);
-        }
-        selectedFileIndex = -1;
-
         frame.add(this);
         frame.setLocationRelativeTo(null);
+        this.addMouseListener(this);
         this.setVisible(true);
         frame.setVisible(true);
 
         actionList = new ArrayList<String>();
-        actionList.add("clicked insert");
-        actionList.add("clicked insert submenu");
-        actionList.add("clicked upload");
-        actionList.add("selected imagefile");
+//        actionList.add("clicked insert");
+//        actionList.add("clicked insert submenu");
+//        actionList.add("clicked upload");
+//        actionList.add("clicked open");
+
+        activeButton = new ArrayList<Rectangle>();
+        rectActionMap = new HashMap<Rectangle, String>();
+        
+        slideList = new ArrayList<Slide>();
+        slideList.add(new Slide(null));
+        slideFocused = 0;
+
+        files = new JLabel[10];
+        for (int i = 0; i < files.length; i++) {
+            files[i] = new JLabel(pictureNames[i]);
+            files[i].setBounds(490, 164 + (17 * i), 200, 16);
+            files[i].addMouseListener(new fileSelectorListener());
+            files[i].setBackground(UIManager.getColor("Panel.background"));
+            files[i].setOpaque(true);
+//            this.add(files[i]);
+        }
+
+        selectedFileIndex = -1;
     }
 
     @Override
@@ -105,27 +129,100 @@ public class ScenarioSlide extends JPanel {
         g.drawImage(bgImage, 0, 0, null);
         g.drawImage(toolbarImage, 0, 0, null);
         g.drawImage(slidesImage, 0, toolbarImage.getHeight(null), null);
+        
+        //paint slide 6 max
+        //create icon
+        for(Slide slide : slideList) {
+            g.drawImage(slideList.get(slideFocused).getSlideIcon(), 35, 200, null);
+        }
+        //create main slide
+        g.drawImage(slideList.get(slideFocused).getSlideMainImage(), 300, 210, null);
+        
 
-        if (actionList.get(actionList.size() - 1).equals("clicked insert")) {
-            g.drawImage(insertMenuImage, 155, toolbarImage.getHeight(null) + 115, null);
-        } else if (actionList.get(actionList.size() - 1).equals("clicked insert submenu")) {
-            g.drawImage(insertSubMenuImage, 155, toolbarImage.getHeight(null) + 115, null);
-        } else if (actionList.get(actionList.size() - 1).equals("clicked upload")) {
-            g.drawImage(fileChooserImage, 325, toolbarImage.getHeight(null) + 86, null);
-        } else if (actionList.get(actionList.size() - 1).equals("selected imagefile")) {
-            g.drawImage(fileChooserImage, 325, toolbarImage.getHeight(null) + 86, null);
-            if (selectedFileIndex > -1) {
-              g.drawImage(fileChooserConfirmImage, 892, toolbarImage.getHeight(null) + 443, null);
-                System.out.println("TRYING TO PAINT");
+        activeButton.clear();
+        if (actionList.isEmpty()) {
+            activeButton.add(new Rectangle(155, 140, 40, 15));
+            g.setColor(newColorWithAlpha(Color.GRAY, 0.2));
+            g.fillRect(activeButton.get(activeButton.size() - 1).x, activeButton.get(activeButton.size() - 1).y, activeButton.get(activeButton.size() - 1).width, activeButton.get(activeButton.size() - 1).height);
+            rectActionMap.put(activeButton.get(activeButton.size() - 1), "clicked insert");
+        } else {
+            if (actionList.get(actionList.size() - 1).equals("clicked insert")) {
+                g.drawImage(insertMenuImage, 155, toolbarImage.getHeight(null) + 115, null); //315
+                activeButton.add(new Rectangle(155, 210, 185, 25));
+                g.setColor(newColorWithAlpha(Color.GRAY, 0.2));
+                g.fillRect(activeButton.get(activeButton.size() - 1).x, activeButton.get(activeButton.size() - 1).y, activeButton.get(activeButton.size() - 1).width, activeButton.get(activeButton.size() - 1).height);
+                rectActionMap.put(activeButton.get(activeButton.size() - 1), "clicked insert submenu");
+            } else if (actionList.get(actionList.size() - 1).equals("clicked insert submenu")) {
+                g.drawImage(insertSubMenuImage, 155, toolbarImage.getHeight(null) + 115, null);
+                activeButton.add(new Rectangle(345, 212, 165, 33));
+                g.setColor(newColorWithAlpha(Color.GRAY, 0.2));
+                g.fillRect(activeButton.get(activeButton.size() - 1).x, activeButton.get(activeButton.size() - 1).y, activeButton.get(activeButton.size() - 1).width, activeButton.get(activeButton.size() - 1).height);
+                rectActionMap.put(activeButton.get(activeButton.size() - 1), "clicked upload");
+            } else if (actionList.get(actionList.size() - 1).equals("clicked upload")) {
+                g.drawImage(fileChooserImage, 325, toolbarImage.getHeight(null) + 86, null);
+                for (int i = 0; i < files.length; i++) {
+                    if(files[i].getParent() != this) {
+                        this.add(files[i]);
+                    }
+                }
+                if (selectedFileIndex > -1) {
+                    g.drawImage(fileChooserConfirmImage, 892, toolbarImage.getHeight(null) + 443, null);
+                    activeButton.add(new Rectangle(892, 463, 69, 20));
+                    g.setColor(newColorWithAlpha(Color.GRAY, 0.2));
+                    g.fillRect(activeButton.get(activeButton.size() - 1).x, activeButton.get(activeButton.size() - 1).y, activeButton.get(activeButton.size() - 1).width, activeButton.get(activeButton.size() - 1).height);
+                    rectActionMap.put(activeButton.get(activeButton.size() - 1), "clicked open");
+                }
             }
         }
 
         //g.drawImage(finderImage, slidesImage.getWidth(null), toolbarImage.getHeight(null), null);
     }
-    
+
+    private Color newColorWithAlpha(Color original, Double alpha) {
+        return new Color(original.getRed(), original.getGreen(), original.getBlue(), (int) (255 * alpha));
+    }
+
     protected void redraw() {
         revalidate();
         repaint();
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        System.out.println(e.getPoint());
+        for (Rectangle rect : activeButton) {
+            if (rect.contains(e.getPoint())) {
+                actionList.add(rectActionMap.get(rect));
+                if(rectActionMap.get(rect).equals("clicked open")) {
+                    insertImage(pictureNames[selectedFileIndex]);
+                }
+                redraw();
+            }
+        }
+
+    }
+    
+    private void insertImage(String img) {
+        
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+//        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+//        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+//        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     private class fileSelectorListener extends MouseAdapter {
@@ -133,17 +230,25 @@ public class ScenarioSlide extends JPanel {
         @Override
         public void mouseClicked(MouseEvent e) {
             JLabel clickedLabel = ((JLabel) e.getSource());
-            clickedLabel.setBackground(Color.red);
-            if (selectedFileIndex > -1) {
-                files[selectedFileIndex].setBackground(UIManager.getColor("Panel.background"));
-            }
-            for (int i = 0; i < files.length; i++) {
-                if (files[i].getBackground().equals(Color.red)) {
-                    selectedFileIndex = i;
-                    redraw();
-                    return;
+            if (selectedFileIndex > -1 && clickedLabel.equals(files[selectedFileIndex])) {
+                System.out.println("same");
+                if (files[selectedFileIndex].getBackground().equals(Color.red)) {
+                    files[selectedFileIndex].setBackground(UIManager.getColor("Panel.background"));
+                    selectedFileIndex = -1;
+                }
+            } else {
+                clickedLabel.setBackground(Color.red);
+                if (selectedFileIndex > -1) {
+                    System.out.println("new");
+                    files[selectedFileIndex].setBackground(UIManager.getColor("Panel.background"));
+                }
+                for (int i = 0; i < files.length; i++) {
+                    if (files[i].getBackground().equals(Color.red)) {
+                        selectedFileIndex = i;
+                    }
                 }
             }
+            redraw();
         }
 
     }
