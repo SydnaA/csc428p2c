@@ -40,7 +40,8 @@ public class ScenarioSlide extends JPanel implements MouseListener {
     private Image bgImage, toolbarImage, slidesImage,
             insertMenuImage, insertSubMenuImage, fileChooserImage,
             fileChooserConfirmImage, slideMenuImage, iconImage,
-            iconMenuImage, iconMenuRecordingImage, iconImageRecording;
+            iconMenuImage, iconMenuRecordingImage, iconImageRecording, 
+            iconMenuImagePlayable;
 
     private List actionList;
     protected JLabel files[];
@@ -103,6 +104,10 @@ public class ScenarioSlide extends JPanel implements MouseListener {
             Image iconMenuRecordingImageRaw = ImageIO.read(getClass().getResource("/scenariolauncher/resources/slide/icon_menu_recording.png"));
             iconMenuRecordingImage = iconMenuRecordingImageRaw.getScaledInstance((int) (iconMenuRecordingImageRaw.getWidth(null) * 0.14), -1, Image.SCALE_SMOOTH);
 
+            Image iconMenuImagePlayableRaw = ImageIO.read(getClass().getResource("/scenariolauncher/resources/slide/icon_menu_recorded.png"));
+            iconMenuImagePlayable = iconMenuImagePlayableRaw.getScaledInstance((int) (iconMenuImagePlayableRaw.getWidth(null) * 0.14), -1, Image.SCALE_SMOOTH);
+
+        
         } catch (IOException ex) {
             Logger.getLogger(ScenarioSlide.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -231,17 +236,20 @@ public class ScenarioSlide extends JPanel implements MouseListener {
                     g.fillRect(activeButton.get(activeButton.size() - 1).x, activeButton.get(activeButton.size() - 1).y, activeButton.get(activeButton.size() - 1).width, activeButton.get(activeButton.size() - 1).height);
                     rectActionMap.put(activeButton.get(activeButton.size() - 1), "clicked stop record");
                 } else {
-                    g.drawImage(iconMenuImage, 905, 0, null);
-                    activeButton.add(new Rectangle(910, 20, 140, 30));
-                    g.setColor(newColorWithAlpha(Color.GRAY, 0.2));
-                    g.fillRect(activeButton.get(activeButton.size() - 1).x, activeButton.get(activeButton.size() - 1).y, activeButton.get(activeButton.size() - 1).width, activeButton.get(activeButton.size() - 1).height);
-                    rectActionMap.put(activeButton.get(activeButton.size() - 1), "clicked record");
+                    
                     if (!stateList.isEmpty()) {
+                        g.drawImage(iconMenuImagePlayable, 905, 0, null);
                         activeButton.add(new Rectangle(910, 50, 140, 30));
                         g.setColor(newColorWithAlpha(Color.GRAY, 0.2));
                         g.fillRect(activeButton.get(activeButton.size() - 1).x, activeButton.get(activeButton.size() - 1).y, activeButton.get(activeButton.size() - 1).width, activeButton.get(activeButton.size() - 1).height);
                         rectActionMap.put(activeButton.get(activeButton.size() - 1), "clicked play");
+                    } else {
+                        g.drawImage(iconMenuImage, 905, 0, null);
                     }
+                    activeButton.add(new Rectangle(910, 20, 140, 30));
+                    g.setColor(newColorWithAlpha(Color.GRAY, 0.2));
+                    g.fillRect(activeButton.get(activeButton.size() - 1).x, activeButton.get(activeButton.size() - 1).y, activeButton.get(activeButton.size() - 1).width, activeButton.get(activeButton.size() - 1).height);
+                    rectActionMap.put(activeButton.get(activeButton.size() - 1), "clicked record");
                 }
             }
         }
