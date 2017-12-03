@@ -17,22 +17,28 @@ import javax.imageio.ImageIO;
  */
 public class Slide {
     private Image slideIcon, slideMainImage;
-    public Slide(Image imageRaw){
-        try {
-            if (imageRaw == null) {
-                Image default_imageRaw = ImageIO.read(getClass().getResource("/scenariolauncher/resources/slide/default_slide.png"));
-                this.setSlideImage(default_imageRaw);
-            } else {
-                this.setSlideImage(imageRaw);
-            }
-        } catch (IOException ex) {
-                Logger.getLogger(Slide.class.getName()).log(Level.SEVERE, null, ex);
-            }
+    public Slide(String imageRaw){
+        if (imageRaw == null) {
+            this.setSlideImage("default_slide.png");
+        } else {
+            this.setSlideImage(imageRaw);
+        }
     }
 
-    public void setSlideImage(Image slide_raw) {
-        this.slideIcon = slide_raw.getScaledInstance((int) (slide_raw.getWidth(null) * 0.07), -1, Image.SCALE_SMOOTH);
-        this.slideMainImage = slide_raw.getScaledInstance((int) (slide_raw.getWidth(null) * 0.45), -1, Image.SCALE_SMOOTH);;
+    public void setSlideImage(String slide_raw_string) {
+        try {
+            Image slide_raw = ImageIO.read(getClass().getResource("/scenariolauncher/resources/slide/pictures/"+slide_raw_string));
+            if(slide_raw_string.equals("default_slide.png")) {
+                this.slideIcon = slide_raw.getScaledInstance((int) (slide_raw.getWidth(null) * 0.07), -1, Image.SCALE_SMOOTH);
+                this.slideMainImage = slide_raw.getScaledInstance((int) (slide_raw.getWidth(null) * 0.45), -1, Image.SCALE_SMOOTH);
+            } else {
+                this.slideIcon = slide_raw.getScaledInstance((int) (slide_raw.getWidth(null) * 0.027), -1, Image.SCALE_SMOOTH);
+                this.slideMainImage = slide_raw.getScaledInstance((int) (slide_raw.getWidth(null) * 0.18), -1, Image.SCALE_SMOOTH);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Slide.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }
 
     public Image getSlideIcon() {
