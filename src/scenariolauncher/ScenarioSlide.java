@@ -33,7 +33,7 @@ public class ScenarioSlide extends JPanel implements MouseListener {
 
     final String[] pictureNames = {"Abstract Shapes.jpg", "Abstract.jpg",
         "Antelope Canyon.jpg", "Bahamas Aerial.jpg", "Blue Pond.jpg",
-        "Color Burst 1.jpg", "Color Burst 2.jpg", "Color Burst 3.jpg",
+        "Color Burst 1.jpg",
         "Death Valley.jpg", "Desert.jpg"};
 
     private JFrame frame;
@@ -127,7 +127,7 @@ public class ScenarioSlide extends JPanel implements MouseListener {
         slideList.add(new Slide(null));
         slideFocused = 0;
 
-        files = new JLabel[10];
+        files = new JLabel[pictureNames.length];
         for (int i = 0; i < files.length; i++) {
             files[i] = new JLabel(pictureNames[i]);
             files[i].setBounds(490, 164 + (17 * i), 200, 16);
