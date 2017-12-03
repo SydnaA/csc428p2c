@@ -96,13 +96,12 @@ public class ScenarioSlide extends JPanel implements MouseListener {
 
             Image iconImageRecordingRaw = ImageIO.read(getClass().getResource("/scenariolauncher/resources/slide/icon_recording.png"));
             iconImageRecording = iconImageRecordingRaw.getScaledInstance((int) (iconImageRecordingRaw.getWidth(null) * 0.14), -1, Image.SCALE_SMOOTH);
-            
+
             Image iconMenuImageRaw = ImageIO.read(getClass().getResource("/scenariolauncher/resources/slide/icon_menu.png"));
             iconMenuImage = iconMenuImageRaw.getScaledInstance((int) (iconMenuImageRaw.getWidth(null) * 0.14), -1, Image.SCALE_SMOOTH);
-            
+
             Image iconMenuRecordingImageRaw = ImageIO.read(getClass().getResource("/scenariolauncher/resources/slide/icon_menu_recording.png"));
             iconMenuRecordingImage = iconMenuRecordingImageRaw.getScaledInstance((int) (iconMenuRecordingImageRaw.getWidth(null) * 0.14), -1, Image.SCALE_SMOOTH);
-            
 
         } catch (IOException ex) {
             Logger.getLogger(ScenarioSlide.class.getName()).log(Level.SEVERE, null, ex);
@@ -170,7 +169,7 @@ public class ScenarioSlide extends JPanel implements MouseListener {
 
         //draw icon
         if (!actionList.get(actionList.size() - 1).equals("clicked icon")) {
-            if(this.isRecording) {
+            if (this.isRecording) {
                 g.drawImage(iconImageRecording, 915, 0, null);
             } else {
                 g.drawImage(iconImage, 915, 0, null);
@@ -225,7 +224,7 @@ public class ScenarioSlide extends JPanel implements MouseListener {
                 g.fillRect(activeButton.get(activeButton.size() - 1).x, activeButton.get(activeButton.size() - 1).y, activeButton.get(activeButton.size() - 1).width, activeButton.get(activeButton.size() - 1).height);
                 rectActionMap.put(activeButton.get(activeButton.size() - 1), "clicked new slide");
             } else if (actionList.get(actionList.size() - 1).equals("clicked icon")) {
-                if(this.isRecording) {
+                if (this.isRecording) {
                     g.drawImage(iconMenuRecordingImage, 905, 0, null);
                     activeButton.add(new Rectangle(910, 20, 140, 30));
                     g.setColor(newColorWithAlpha(Color.GRAY, 0.2));
@@ -237,7 +236,7 @@ public class ScenarioSlide extends JPanel implements MouseListener {
                     g.setColor(newColorWithAlpha(Color.GRAY, 0.2));
                     g.fillRect(activeButton.get(activeButton.size() - 1).x, activeButton.get(activeButton.size() - 1).y, activeButton.get(activeButton.size() - 1).width, activeButton.get(activeButton.size() - 1).height);
                     rectActionMap.put(activeButton.get(activeButton.size() - 1), "clicked record");
-                    if(!stateList.isEmpty()) {
+                    if (!stateList.isEmpty()) {
                         activeButton.add(new Rectangle(910, 50, 140, 30));
                         g.setColor(newColorWithAlpha(Color.GRAY, 0.2));
                         g.fillRect(activeButton.get(activeButton.size() - 1).x, activeButton.get(activeButton.size() - 1).y, activeButton.get(activeButton.size() - 1).width, activeButton.get(activeButton.size() - 1).height);
@@ -259,13 +258,13 @@ public class ScenarioSlide extends JPanel implements MouseListener {
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        System.out.println(e.getPoint());
+//        System.out.println(e.getPoint());
         for (Rectangle rect : activeButton) {
             if (rect.contains(e.getPoint())) {
                 actionList.add(rectActionMap.get(rect));
                 if (rectActionMap.get(rect).equals("clicked open")) {
                     if (this.isRecording) {
-                        stateList.add(new State("clicked open", selectedFileIndex));
+                        stateList.add(new State("clicked open", selectedFileIndex, this.slideFocused));
                     }
                     slideList.get(slideFocused).setSlideImage(pictureNames[selectedFileIndex]);
                     files[selectedFileIndex].setBackground(UIManager.getColor("Panel.background"));
@@ -276,25 +275,79 @@ public class ScenarioSlide extends JPanel implements MouseListener {
                     actionList.add("base");
                 } else if (rectActionMap.get(rect).equals("clicked new slide")) {
                     if (this.isRecording) {
-                        stateList.add(new State("clicked new slide"));
+                        stateList.add(new State("clicked new slide", this.slideList.size()));
                     }
-                    this.slideList.add(new Slide(null));
-                    this.slideFocused = this.slideList.size() - 1;
-                    actionList.add("base");
+                    addNewSlide();
                 } else if (rectActionMap.get(rect).equals("switch slide")) {
                     this.slideFocused = (int) (rect.y - 200) / 90;
-                    if (this.isRecording) {
-                        stateList.add(new State("switch slide", this.slideFocused));
-                    }
+//                    if (this.isRecording) {
+//                        stateList.add(new State("switch slide", this.slideFocused));
+//                    }
                     actionList.add("base");
                 } else if (rectActionMap.get(rect).equals("clicked record")) {
+                    stateList.clear();
                     this.isRecording = true;
                     actionList.add("base");
-                } else if (rectActionMap.get(rect).equals("clicked stop recording")) {
+                } else if (rectActionMap.get(rect).equals("clicked stop record")) {
                     this.isRecording = false;
                     actionList.add("base");
                 } else if (rectActionMap.get(rect).equals("clicked play")) {
-                    
+//                    for (State state : stateList) {
+//                        System.out.println(state);
+//                    }
+
+//                    System.out.println("==============");
+                    int lastFileIndex = -1, lastLastFileIndex = -1;
+                    int lastLocIndex = -1, lastLastLocIndex = -1;
+                    for (int i = 0; i < stateList.size(); i++) {
+                        if (stateList.get(i).getAction().equals("clicked open")) {
+                            if (lastFileIndex != -1) {
+                                lastLastFileIndex = lastFileIndex;
+                            }
+                            lastFileIndex = stateList.get(i).getData();
+                            if (lastLocIndex != -1) {
+                                lastLastLocIndex = lastLocIndex;
+                            }
+                            lastLocIndex = stateList.get(i).getLocIndex();
+                        }
+                    }
+//                    System.out.println("last " + lastFileIndex + " at index: " + lastLocIndex);
+//                    System.out.println("lastlast " + lastLastFileIndex + " at index: " + lastLastLocIndex);
+                    int targetIndex = lastFileIndex;
+                    for (State state : stateList) {
+                        if (state.getAction().equals("clicked new slide")) {
+                            if(this.slideList.size() == 5) {
+                                return;
+                            }
+                            addNewSlide();
+//                            System.out.println("new slide");
+                        } 
+//                        else if (state.getAction().equals("switch slide")) {
+//                            if (lastLastLocIndex != -1 && lastLocIndex != lastLastLocIndex) {
+//                                if (lastLocIndex > lastLastLocIndex) {
+//                                    targetLocIndex++;
+//                                } else {
+//                                    targetLocIndex--;
+//                                }
+//                            }
+//                            if(targetLocIndex == -1 && targetLocIndex == 6) {
+//                                return;
+//                            }
+//                            this.slideFocused = lastLocIndex;
+//                        } 
+                        else if (state.getAction().equals("clicked open")) {
+                            if (lastLastFileIndex != -1 && lastFileIndex != lastLastFileIndex) {
+                                if (lastFileIndex > lastLastFileIndex) {
+                                    targetIndex++;
+                                } else {
+                                    targetIndex--;
+                                }
+                            }
+
+//                            System.out.println("open " + targetIndex + " at index: " + slideFocused);
+                            slideList.get(slideFocused).setSlideImage(pictureNames[targetIndex]);
+                        }
+                    }
                     actionList.add("base");
                 }
                 redraw();
@@ -302,6 +355,12 @@ public class ScenarioSlide extends JPanel implements MouseListener {
             }
         }
 
+    }
+
+    private void addNewSlide() {
+        this.slideList.add(new Slide(null));
+        this.slideFocused = this.slideList.size() - 1;
+        actionList.add("base");
     }
 
     @Override
@@ -337,7 +396,6 @@ public class ScenarioSlide extends JPanel implements MouseListener {
             } else {
                 clickedLabel.setBackground(Color.red);
                 if (selectedFileIndex > -1) {
-                    System.out.println("new");
                     files[selectedFileIndex].setBackground(UIManager.getColor("Panel.background"));
                 }
                 for (int i = 0; i < files.length; i++) {
